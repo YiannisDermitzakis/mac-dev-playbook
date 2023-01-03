@@ -1,12 +1,12 @@
 ---
-- hosts: all
+- hosts: dpro
 
   vars_files:
     - default.config.yml
 
   pre_tasks:
     - name: Include playbook configuration.
-      include_vars: "{{ item }}"
+      ansible.builtin.include_vars: "{{ item }}"
       with_fileglob:
         - "{{ playbook_dir }}/config.yml"
       tags: ['always']
@@ -26,29 +26,35 @@
       tags: ['dock']
 
   tasks:
-    - import_tasks: tasks/sudoers.yml
+    - name: Configure sudoers.
+      ansible.builtin.import_tasks: tasks/sudoers.yml
       when: configure_sudoers
       tags: ['sudoers']
 
-    - import_tasks: tasks/terminal.yml
+    - name: Configure terminal.
+      ansible.builtin.import_tasks: tasks/terminal.yml
       when: configure_terminal
       tags: ['terminal']
 
-    - import_tasks: tasks/osx.yml
+    - name: Configure OSX.
+      ansible.builtin.import_tasks: tasks/osx.yml
       when: configure_osx
       tags: ['osx']
 
-    - import_tasks: tasks/extra-packages.yml
+    - name: Extra packages.
+      ansible.builtin.import_tasks: tasks/extra-packages.yml
       tags: ['extra-packages']
 
-    - import_tasks: tasks/sublime-text.yml
+    - name: Configure sublime.
+      ansible.builtin.import_tasks: tasks/sublime-text.yml
       when: configure_sublime
       tags: ['sublime-text']
 
-    - block:
+    - name: Post-provision items.
+      tags: ['post']
+      block:
         - name: Run configured post-provision ansible task files.
-          include_tasks: "{{ outer_item }}"
+          ansible.builtin.include_tasks: "{{ outer_item }}"
           loop_control:
             loop_var: outer_item
-          with_fileglob: "{{ post_provision_tasks|default(omit) }}"
-      tags: ['post']
+          with_fileglob: "{{ post_provision_tasks | default(omit) }}"
